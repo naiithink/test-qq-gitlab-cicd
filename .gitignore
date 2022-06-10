@@ -1,12 +1,12 @@
 # Executables
-.bin/*
-bin/*
+bin/
+.bin/
 *.bin
-out/*
+out/
 *.out
 
 # VS Code
-.vscode/*
+.vscode/
 # !.vscode/settings.json
 # !.vscode/tasks.json
 # !.vscode/launch.json

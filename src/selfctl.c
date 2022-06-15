@@ -1,30 +1,10 @@
 /**
  * \file selfctl.c
  * \author Potsawat Thinkanwatthana (potsawattkw@outlook.com)
- * \brief Monitoring and controlling the execution time of process(es), if a process reaches its limit, kill it.
- * \version 0.0.1
+ * \brief Monitoring and controlling the execution time of process(es), if a process reaches its limit then kill it.
+ * \version 0.0.0
  * \date 2022-06-10
  * 
- */
-
-/**
- * The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
-    NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
-    "OPTIONAL" in this document are to be interpreted as described in
-    \href{https://www.ietf.org/rfc/rfc2119.txt}{RFC 2119}.
- * 
- * NOTES:
- *  - C++-style comments (`//') MUST NOT be used in this source file and
- *      the corresponding header file.
- * 
- * TERMS:
- *  - Functions
- *      -#  `ARG_VALID'\n
- *          :the function MUST validate its argument before executing any statement.
- *      -#  `Cleanup'\n
- *          :the function SHOULD cleanup something.
- *      -#  `SINGLE_EXIT'\n
- *          :the function MUST has a single return statement.
  */
 
 #include <errno.h>
@@ -42,7 +22,6 @@
 #include <time.h>
 #include <unistd.h>
 
-/* -I proj/include/ */
 #include "selfctl.h"
 
 #if (defined __GNU__ && __gnu_hurd__    \
@@ -71,12 +50,13 @@ main (int argc, char **argv)
     const unsigned int max_longopt_name_len = 16;
     int ch = 0;
     int opt_index = 0;
-    struct stat *prog_hist_file_info = (struct stat *) malloc (sizeof(struct stat));
-    struct stat *job_log_file_info = (struct stat *) malloc (sizeof(struct stat));
-
     int tmp_mode = 0;
+    struct stat *prog_hist_file_info;
+    struct stat *job_log_file_info;
 
     opterr = 0;
+    prog_hist_file_info = malloc (sizeof *prog_hist_file_info);
+    job_log_file_info = malloc (sizeof *job_log_file_info);
 
     static struct option longopts[] =
     {
@@ -94,7 +74,9 @@ main (int argc, char **argv)
                     break;
                 else
                 {
-                    fprintf (stderr, "%s:%i: InternalError: '%s': this option must set a flag.\n", __FILE__, __LINE__, longopts[opt_index].name);
+                    TRACE("InternalError: the option must set a flag.");
+                    /* fprintf (stderr, "%s:%i:\
+InternalError: '%s': this option must set a flag.\n", __FILE__, __LINE__, longopts[opt_index].name); */
                     exit (1);
                 }
             case 'p':
@@ -126,17 +108,20 @@ main (int argc, char **argv)
                     switch (errno)
                     {
                         case ENOENT:
-                            fprintf (stderr, "%s: Error: '%s' no such file or directory.\n", PROGRAM_NAME, longopts[opt_index].name);
+                            TRACE("Error: no such file or directory");
+                            /* fprintf (stderr, "%s: Error: '%s' no such file or directory.\n", PROGRAM_NAME, longopts[opt_index].name); */
                             break;
                         default:
-                            fprintf (stderr, "%s:%i: InternalError: '%s': unknown error occurs.\n", __FILE__, __LINE__, longopts[opt_index].name);
+                            TRACE("InternalError: unknown error occurs");
+                            /* fprintf (stderr, "%s:%i: InternalError: '%s': unknown error occurs.\n", __FILE__, __LINE__, longopts[opt_index].name); */
                     }
                     /* prep_exit() ? */
                     exit (errno);
                 }
                 break;
             case '?':
-                fprintf (stderr, "%s: Error: '%s' requires argument.\n", PROGRAM_NAME, longopts[opt_index].name);
+                TRACE("Error: option requires argument");
+                /* fprintf (stderr, "%s: Error: '%s' requires argument.\n", PROGRAM_NAME, longopts[opt_index].name); */
                 break;
             default:
                 abort ();
@@ -151,7 +136,7 @@ main (int argc, char **argv)
 
     while ((ptime_cur = clock ()) < MAX_JOBPRD_TICKS)
     {
-        // do something
+        /* do something */
     }
 
     clock_t ptime_end = clock ();
@@ -180,8 +165,9 @@ auto_create_thread (thread_table *table)
 {
     if (table == NULL)
     {
-        fprintf (stderr, "%s:%i: Error: NULL `thread_table *table'\n", __FILE__, __LINE__);
-        prep_exit ();
+        TRACE("Error: NULL `thread_table *table'");
+        /* fprintf (stderr, "%s:%i: Error: NULL `thread_table *table'\n", __FILE__, __LINE__); */
+        prep_exit (); /*  */
     }
 }
 
@@ -240,6 +226,7 @@ hash (int num)
  *     }
  * }
  */
+
 int
 checkperm (char *path, const int mode)
 {

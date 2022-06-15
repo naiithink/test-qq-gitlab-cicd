@@ -1,41 +1,25 @@
 /**
  * \file selfctl.h
  * \author Potsawat Thinkanwatthana (potsawattkw@outlook.com)
- * \brief Monitoring and controlling the execution time of process(es), if a process reaches its limit, kill it.
- * \version 0.0.1
+ * \brief Monitoring and controlling the execution time of process(es), if a process reaches its limit then kill it.
+ * \version 0.0.0
  * \date 2022-06-10
  * 
- */
-
-/**
- * The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
-    NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
-    "OPTIONAL" in this document are to be interpreted as described in
-    \href{https://www.ietf.org/rfc/rfc2119.txt}{RFC 2119}.
- * 
- * NOTES:
- *  - C++-style comments (`//') MUST NOT be used in this header file and
- *      the corresponding source file.
- * 
- * TERMS:
- *  - Functions
- *      -#  `ARG_VALID'\n
- *          :the function MUST validate its argument before executing any statement.
- *      -#  `cleanup'\n
- *          :the function SHOULD cleanup something.
- *      -#  `SINGLE_EXIT'\n
- *          :the function MUST has a single return statement.
  */
 
 #ifndef SELFCTL_H
 #define SELFCTL_H
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #define PROGRAM_NAME "selfctl"
 #define SOMETHING_WENT_WRONG 0
+
+#if __STDC_VERSION__ < 199901L
+#error "unsupported C standard"
+#endif
 
 #if (defined __GNU__ && __gnu_hurd__    \
      || defined __gnu_linux__           )
@@ -46,18 +30,25 @@ extern "C" {
 
 #include <pthread.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #define FMODE_1S        1111111
-#define FMODE_FULL      0000700
-#define FMODE_DIR       0040000
-#define FMODE_UREAD     0000400
-#define FMODE_UWRIT     0000200
-#define FMODE_UEXEC     0000100
+#define FMODE_DIR       S_IFDIR                         /* 0040000 */
+#define FMODE_FULL      S_IRWXU                         /* 0000700 */
+#define FMODE_UREAD     S_IRUSR                         /* 0000400 */
+#define FMODE_UWRIT     S_IWUSR                         /* 0000200 */
+#define FMODE_UEXEC     S_IXUSR                         /* 0000100 */
 #define MAX_THREAD 2
 #define MAX_JOBNAME 2
 #define N_SUPPORTED_DFT_SIG_HANDLING 2
 #define N_SUPPORTED_CUS_SIG_HANDLING 0
 #define PTHREAD_INIT (pthread_t)(MAX_THREAD + 1)
+
+#if defined NDEBUG
+#define TRACE(fmt, ...)
+#else
+#define TRACE(msg) fprintf (stderr, "%s:%s:%d: %s\n", __FILE__, __func__, __LINE__, msg)
+#endif
 
 typedef enum
 {
@@ -85,28 +76,28 @@ typedef enum
 }
 self_type;
 
-#define TYPE_OF(x) _Generic((x),                                                    \
-                             _Bool:                     (self_type T_BOOL ),                     \
-                             short int:                 (self_type T_SHORT_INT ),                \
-                             unsigned short int:        (self_type T_UNSIGNED_SHORT_INT ),       \
-                             int:                       (self_type T_INT ),                      \
-                             unsigned int:              (self_type T_UNSIGNED_INT ),             \
-                             long int:                  (self_type T_LONG_INT ),                 \
-                             unsigned long int:         (self_type T_UNSIGNED_LONG_INT ),        \
-                             long long int:             (self_type T_LONG_LONG_INT ),            \
-                             unsigned long long int:    (self_type T_UNSIGNED_LONG_LONG_INT ),   \
-                             float:                     (self_type T_FLOAT ),                    \
-                             double:                    (self_type T_DOUBLE ),                   \
-                             long double:               (self_type T_LONG_DOUBLE ),              \
-                             char:                      (self_type T_CHAR ),                     \
-                             signed char:               (self_type T_SIGNED_CHAR ),              \
-                             unsigned char:             (self_type T_UNSIGNED_CHAR ),            \
-                             int[]:                     (self_type T_INT_PTR_ARR ),              \
-                             int *:                     (self_type T_INT_PTR ),                  \
-                             char[]:                    (self_type T_CHAR_PTR_ARR ),             \
-                             char *:                    (self_type T_CHAR_PTR ),                 \
-                             void *:                    (self_type T_VOID_PTR ),                 \
-                             default:                   (self_type T_UNKNOWN_TYPE )              )
+#define TYPE_OF(x) _Generic((x),                                                                \
+                            _Bool:                     (self_type T_BOOL ),                     \
+                            short int:                 (self_type T_SHORT_INT ),                \
+                            unsigned short int:        (self_type T_UNSIGNED_SHORT_INT ),       \
+                            int:                       (self_type T_INT ),                      \
+                            unsigned int:              (self_type T_UNSIGNED_INT ),             \
+                            long int:                  (self_type T_LONG_INT ),                 \
+                            unsigned long int:         (self_type T_UNSIGNED_LONG_INT ),        \
+                            long long int:             (self_type T_LONG_LONG_INT ),            \
+                            unsigned long long int:    (self_type T_UNSIGNED_LONG_LONG_INT ),   \
+                            float:                     (self_type T_FLOAT ),                    \
+                            double:                    (self_type T_DOUBLE ),                   \
+                            long double:               (self_type T_LONG_DOUBLE ),              \
+                            char:                      (self_type T_CHAR ),                     \
+                            signed char:               (self_type T_SIGNED_CHAR ),              \
+                            unsigned char:             (self_type T_UNSIGNED_CHAR ),            \
+                            int[]:                     (self_type T_INT_PTR_ARR ),              \
+                            int *:                     (self_type T_INT_PTR ),                  \
+                            char[]:                    (self_type T_CHAR_PTR_ARR ),             \
+                            char *:                    (self_type T_CHAR_PTR ),                 \
+                            void *:                    (self_type T_VOID_PTR ),                 \
+                            default:                   (self_type T_UNKNOWN_TYPE )              )
 
 /* >>> tmp */
 #define MAX_JOBPRD_INMIN 12
@@ -172,7 +163,7 @@ void *sighandler (int);
 
 extern V_PF_VS my_default_sighandlers[N_SUPPORTED_DFT_SIG_HANDLING];
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 }
 #endif
 

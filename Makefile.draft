@@ -1,0 +1,19 @@
+CC := gcc
+CFLAGS := '-Iinclude'
+SRCDIR := src
+BUILDDIR := build
+
+all: config $(SRCDIR)/selfctl
+
+.PHONY: all clean config .FORCE
+
+%.out: %.c config .FORCE
+	$(CC) $(CFLAGS) $< -o $(BUILDDIR)/$@
+
+config:
+	mkdir -p $(BUILDDIR)
+
+clean:
+	rm -rf $(BUILDDIR) *.out *.o *.so *.a
+	find . -type f -perm -100 -not -path './.git/*' -exec rm {} \;
+	find . -type f -not -path './.git/*' -regex '.*\.o$' -exec rm {} \;
